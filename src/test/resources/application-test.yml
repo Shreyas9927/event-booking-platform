@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: ${TEST_DB_URL}
+    username: ${TEST_DB_USERNAME}
+    password: ${TEST_DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    open-in-view: false
+
+app:
+  jwt:
+    secret: VGhpc0lzQVRlc3RPbmx5Snd0U2VjcmV0S2V5Rm9yQm9va2luZ1BsYXRmb3JtMjAyNg==
+    expiration: 3600000
