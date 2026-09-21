@@ -15,9 +15,11 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
+    // JWT secret is read from configuration instead of hard-coding it
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
+    // Token validity duration in milliseconds
     @Value("${app.jwt.expiration}")
     private long jwtExpiration;
 
@@ -28,6 +30,7 @@ public class JwtService {
                 issuedAt.getTime() + jwtExpiration
         );
 
+        // Create a signed token containing the logged-in user's email
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(issuedAt)
@@ -46,6 +49,7 @@ public class JwtService {
 
         String username = extractUsername(token);
 
+        // Token must belong to the same user and should not be expired
         return username.equals(userDetails.getUsername())
                 && !isTokenExpired(token);
     }
@@ -66,6 +70,7 @@ public class JwtService {
             String token,
             Function<Claims, T> claimsResolver) {
 
+        // Verify token signature before reading its claims
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
@@ -77,6 +82,7 @@ public class JwtService {
 
     private SecretKey getSigningKey() {
 
+        // Convert Base64 secret from configuration into an HMAC signing key
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
 
         return Keys.hmacShaKeyFor(keyBytes);

@@ -17,6 +17,7 @@ import {
 } from "../../services/eventService";
 
 function OrganiserEventsPage() {
+    // Reads the success message sent from CreateEventPage after creation
     const location = useLocation();
     const successMessage = location.state?.message;
 
@@ -25,8 +26,10 @@ function OrganiserEventsPage() {
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
+        // Prevent state updates if the user leaves this page before API finishes
         let isActive = true;
 
+        // Backend identifies the organiser from the JWT token
         getMyEvents()
             .then((eventData) => {
                 if (isActive) {
@@ -52,6 +55,7 @@ function OrganiserEventsPage() {
         };
     }, []);
 
+    // Convert backend date into a readable Indian date and time format
     const formatDate = (date) =>
         new Intl.DateTimeFormat("en-IN", {
             dateStyle: "medium",
@@ -83,6 +87,7 @@ function OrganiserEventsPage() {
                 </Link>
             </section>
 
+            {/* Show message after an event is created successfully */}
             {successMessage && (
                 <div className="form-success page-message">
                     {successMessage}
@@ -126,9 +131,9 @@ function OrganiserEventsPage() {
                         >
                             <div className="organiser-event-header">
                                 <div>
-                  <span className="event-id">
-                    EVENT #{event.id}
-                  </span>
+                                    <span className="event-id">
+                                        EVENT #{event.id}
+                                    </span>
 
                                     <h2>{event.name}</h2>
                                 </div>
@@ -170,6 +175,7 @@ function OrganiserEventsPage() {
                             </div>
 
                             <div className="booking-progress">
+                                {/* Width changes based on the percentage of tickets booked */}
                                 <div
                                     style={{
                                         width: `${

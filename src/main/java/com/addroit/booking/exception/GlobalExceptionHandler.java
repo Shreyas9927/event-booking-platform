@@ -98,6 +98,7 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // Both cases represent a conflict with the current booking state
     @ExceptionHandler({
             InsufficientTicketsException.class,
             BookingAlreadyCancelledException.class
@@ -132,6 +133,7 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException exception,
             HttpServletRequest request) {
 
+        // Combine all DTO validation errors into one readable message
         String validationMessage = exception
                 .getBindingResult()
                 .getFieldErrors()
@@ -164,6 +166,7 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // Final fallback for errors not handled by specific exception methods
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleGenericException(
             Exception exception,
@@ -177,6 +180,7 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // Create the same structured error response for every exception
     private ResponseEntity<ErrorResponseDto> buildErrorResponse(
             HttpServletRequest request,
             String errorCode,

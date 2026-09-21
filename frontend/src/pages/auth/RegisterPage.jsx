@@ -22,6 +22,7 @@ function RegisterPage() {
     const [errorMessage, setErrorMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Update the field that the user changes
     const handleChange = (event) => {
         const { name, value } = event.target;
 
@@ -32,24 +33,29 @@ function RegisterPage() {
     };
 
     const handleSubmit = async (event) => {
+        // Prevent normal form submission and page reload
         event.preventDefault();
         setErrorMessage("");
         setIsSubmitting(true);
 
         try {
+            // Send registration details to the backend
             await registerUser(formData);
 
+            // Redirect to login page with registration success message
             navigate("/login", {
                 state: {
                     message: "Registration successful. You can now sign in.",
                 },
             });
         } catch (error) {
+            // Display backend error or fallback message
             setErrorMessage(
                 error.response?.data?.errorMessage ||
                 "Unable to create your account. Please try again.",
             );
         } finally {
+            // Enable the submit button after request completion
             setIsSubmitting(false);
         }
     };
@@ -64,7 +70,11 @@ function RegisterPage() {
 
                 <div className="brand-message">
                     <p className="eyebrow">JOIN THE COMMUNITY</p>
-                    <h1>Turn plans into experiences worth remembering.</h1>
+
+                    <h1>
+                        Turn plans into experiences worth remembering.
+                    </h1>
+
                     <p>
                         Join as an organiser to create events or as an attendee
                         to discover and book them.
@@ -75,11 +85,14 @@ function RegisterPage() {
             <section className="auth-form-panel">
                 <div className="auth-card">
                     <p className="eyebrow">GET STARTED</p>
+
                     <h2>Create your account</h2>
+
                     <p className="auth-subtitle">
                         Choose your role and enter your details.
                     </p>
 
+                    {/* Show an error only when registration fails */}
                     {errorMessage && (
                         <div className="form-error" role="alert">
                             {errorMessage}
@@ -91,6 +104,7 @@ function RegisterPage() {
 
                         <div className="input-wrapper">
                             <UserRound size={18} />
+
                             <input
                                 id="name"
                                 name="name"
@@ -108,6 +122,7 @@ function RegisterPage() {
 
                         <div className="input-wrapper">
                             <Mail size={18} />
+
                             <input
                                 id="email"
                                 name="email"
@@ -124,6 +139,7 @@ function RegisterPage() {
 
                         <div className="input-wrapper">
                             <LockKeyhole size={18} />
+
                             <input
                                 id="password"
                                 name="password"
@@ -141,6 +157,7 @@ function RegisterPage() {
 
                         <div className="input-wrapper">
                             <UsersRound size={18} />
+
                             <select
                                 id="role"
                                 name="role"
@@ -152,6 +169,7 @@ function RegisterPage() {
                             </select>
                         </div>
 
+                        {/* Disable button while the registration request is running */}
                         <button
                             className="primary-button"
                             type="submit"

@@ -20,10 +20,12 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
 
+        // Keep email comparison consistent during login and token validation
         String normalizedEmail = email
                 .trim()
                 .toLowerCase(Locale.ROOT);
 
+        // Load user credentials and role from our users table
         User user = userRepository
                 .findByEmail(normalizedEmail)
                 .orElseThrow(() ->
@@ -32,6 +34,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                         )
                 );
 
+        // Convert our User entity into Spring Security's UserDetails object
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
                 .password(user.getPasswordHash())

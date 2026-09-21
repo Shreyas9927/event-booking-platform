@@ -14,6 +14,7 @@ public final class EventMapper {
             CreateEventRequestDto requestDto,
             User organiser) {
 
+        // Set available tickets equal to total capacity when event is created
         return Event.builder()
                 .name(requestDto.getName())
                 .description(requestDto.getDescription())
@@ -33,6 +34,8 @@ public final class EventMapper {
                 .eventDate(event.getEventDate())
                 .capacity(event.getCapacity())
                 .availableTickets(event.getAvailableTickets())
+
+                // Calculate booked tickets to avoid storing duplicate ticket data
                 .bookedTickets(
                         event.getCapacity() - event.getAvailableTickets()
                 )

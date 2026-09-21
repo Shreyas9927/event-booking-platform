@@ -33,6 +33,7 @@ public class EventServiceImpl implements EventService {
             CreateEventRequestDto requestDto,
             String organiserEmail) {
 
+        // Get the currently logged-in organiser using email from JWT
         User organiser = userRepository
                 .findByEmail(organiserEmail)
                 .orElseThrow(() ->
@@ -41,17 +42,21 @@ public class EventServiceImpl implements EventService {
                         )
                 );
 
+        // Only organisers are allowed to create events
         if (organiser.getRole() != Role.ORGANISER) {
             throw new ForbiddenOperationException(
                     EventConstants.MESSAGE_403
             );
         }
 
+        // Convert validated request data into an Event entity
+        // Available tickets are initially set equal to event capacity
         Event event = EventMapper.toEntity(
                 requestDto,
                 organiser
         );
 
+        // Save event along with organiser relationship in database
         Event savedEvent = eventRepository.save(event);
 
         return EventMapper.toResponseDto(savedEvent);
@@ -61,6 +66,7 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     public List<EventResponseDto> getUpcomingEvents() {
 
+        // Fetch only future events and show nearest event first
         return eventRepository
                 .findByEventDateAfterOrderByEventDateAsc(
                         LocalDateTime.now()
@@ -75,6 +81,7 @@ public class EventServiceImpl implements EventService {
     public List<EventResponseDto> getMyEvents(
             String organiserEmail) {
 
+        // Get the logged-in organiser using email from JWT
         User organiser = userRepository
                 .findByEmail(organiserEmail)
                 .orElseThrow(() ->
@@ -83,6 +90,7 @@ public class EventServiceImpl implements EventService {
                         )
                 );
 
+        // Fetch only events created by this organiser, latest created first
         return eventRepository
                 .findByOrganiserIdOrderByCreatedAtDesc(
                         organiser.getId()

@@ -13,12 +13,15 @@ import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
 
+    // Fetch events created by organiser, latest created event first
     List<Event> findByOrganiserIdOrderByCreatedAtDesc(Long organiserId);
 
+    // Fetch only upcoming events and show nearest event first
     List<Event> findByEventDateAfterOrderByEventDateAsc(
             LocalDateTime currentDateTime
     );
 
+    // Lock event row before updating ticket availability to prevent overselling
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT e

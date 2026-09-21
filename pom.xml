@@ -11,9 +11,9 @@
 	<groupId>com.addroit</groupId>
 	<artifactId>booking-platform</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
+	<name>EventFlow</name>
+	<description>A full-stack event booking platform deployed on AWS</description>
+	<url>https://github.com/Shreyas9927/event-booking-platform</url>
 	<licenses>
 		<license/>
 	</licenses>

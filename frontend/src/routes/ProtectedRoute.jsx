@@ -4,10 +4,12 @@ import useAuth from "../context/useAuth";
 function ProtectedRoute({ allowedRoles }) {
     const { user, isAuthenticated } = useAuth();
 
+    // Send users to login if no user is currently signed in
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
     }
 
+    // Redirect users who do not have an allowed role
     if (
         allowedRoles &&
         !allowedRoles.includes(user.role)
@@ -20,6 +22,7 @@ function ProtectedRoute({ allowedRoles }) {
         return <Navigate to={correctPath} replace />;
     }
 
+    // Show the matching child route after the checks pass
     return <Outlet />;
 }
 

@@ -16,6 +16,7 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI bookingPlatformOpenApi() {
 
+        // Define JWT Bearer token authentication for Swagger
         SecurityScheme securityScheme = new SecurityScheme()
                 .name(SECURITY_SCHEME_NAME)
                 .type(SecurityScheme.Type.HTTP)
@@ -31,12 +32,14 @@ public class OpenApiConfig {
                         )
                         .version("1.0.0")
                 )
+                // Apply JWT authentication to protected Swagger API requests
                 .addSecurityItem(
                         new SecurityRequirement()
                                 .addList(SECURITY_SCHEME_NAME)
                 )
                 .components(
                         new Components()
+                                // Register the Bearer JWT scheme with Swagger
                                 .addSecuritySchemes(
                                         SECURITY_SCHEME_NAME,
                                         securityScheme

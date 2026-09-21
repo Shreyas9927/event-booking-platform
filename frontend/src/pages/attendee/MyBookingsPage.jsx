@@ -23,8 +23,10 @@ function MyBookingsPage() {
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
+        // Prevent state updates after the user leaves this page
         let isActive = true;
 
+        // Load bookings belonging to the logged-in attendee
         getMyBookings()
             .then((bookingData) => {
                 if (isActive) {
@@ -53,12 +55,15 @@ function MyBookingsPage() {
     const handleCancellation = async (bookingId) => {
         setSuccessMessage("");
         setErrorMessage("");
+
+        // Track the booking currently being cancelled
         setCancellingId(bookingId);
 
         try {
             const cancelledBooking =
                 await cancelBooking(bookingId);
 
+            // Replace only the cancelled booking with updated backend data
             setBookings((currentBookings) =>
                 currentBookings.map((booking) =>
                     booking.id === bookingId
@@ -80,6 +85,7 @@ function MyBookingsPage() {
         }
     };
 
+    // Format backend date values for display
     const formatDate = (date) =>
         new Intl.DateTimeFormat("en-IN", {
             dateStyle: "medium",
@@ -104,12 +110,14 @@ function MyBookingsPage() {
                 <ReceiptText size={42} />
             </section>
 
+            {/* Show success message after cancellation */}
             {successMessage && (
                 <div className="form-success page-message">
                     {successMessage}
                 </div>
             )}
 
+            {/* Show API error only when an error occurs */}
             {errorMessage && (
                 <div
                     className="form-error page-message"
@@ -119,16 +127,20 @@ function MyBookingsPage() {
                 </div>
             )}
 
+            {/* Show loading state while bookings are being fetched */}
             {isLoading && (
                 <div className="loading-state">
                     Loading your bookings...
                 </div>
             )}
 
+            {/* Show empty state when attendee has no bookings */}
             {!isLoading && bookings.length === 0 && (
                 <div className="empty-state">
                     <TicketCheck size={42} />
+
                     <h2>No bookings yet</h2>
+
                     <p>
                         Book an upcoming event and it will appear
                         here.
@@ -136,6 +148,7 @@ function MyBookingsPage() {
                 </div>
             )}
 
+            {/* Display each booking when booking data exists */}
             {!isLoading && bookings.length > 0 && (
                 <section className="booking-list">
                     {bookings.map((booking) => (
@@ -153,34 +166,35 @@ function MyBookingsPage() {
                                         <h2>{booking.eventName}</h2>
 
                                         <span className="booking-reference">
-                      {booking.bookingReference}
-                    </span>
+                                            {booking.bookingReference}
+                                        </span>
                                     </div>
 
                                     <span
                                         className={`status-badge ${booking.status.toLowerCase()}`}
                                     >
-                    {booking.status}
-                  </span>
+                                        {booking.status}
+                                    </span>
                                 </div>
 
                                 <div className="booking-meta">
-                  <span>
-                    <CalendarClock size={17} />
-                      {formatDate(booking.eventDate)}
-                  </span>
+                                    <span>
+                                        <CalendarClock size={17} />
+                                        {formatDate(booking.eventDate)}
+                                    </span>
 
                                     <span>
-                    <TicketCheck size={17} />
+                                        <TicketCheck size={17} />
                                         {booking.quantity} ticket(s)
-                  </span>
+                                    </span>
 
                                     <span>
-                    Booked {formatDate(booking.bookedAt)}
-                  </span>
+                                        Booked {formatDate(booking.bookedAt)}
+                                    </span>
                                 </div>
                             </div>
 
+                            {/* Show cancellation action only for confirmed bookings */}
                             {booking.status === "CONFIRMED" && (
                                 <button
                                     className="cancel-button"

@@ -12,10 +12,12 @@ import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
+    // Fetch logged-in attendee's bookings with latest booking shown first
     List<Booking> findByAttendeeIdOrderByBookedAtDesc(
             Long attendeeId
     );
 
+    // Lock booking row and verify ownership to prevent duplicate cancellation
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT b

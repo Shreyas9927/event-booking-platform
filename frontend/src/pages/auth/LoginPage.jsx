@@ -16,6 +16,7 @@ function LoginPage() {
     const location = useLocation();
     const { login } = useAuth();
 
+    // Read a message passed when navigating to the login page
     const successMessage = location.state?.message;
 
     const [formData, setFormData] = useState({
@@ -26,6 +27,7 @@ function LoginPage() {
     const [errorMessage, setErrorMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Update the changed field while keeping the other field unchanged
     const handleChange = (event) => {
         const { name, value } = event.target;
 
@@ -36,6 +38,7 @@ function LoginPage() {
     };
 
     const handleSubmit = async (event) => {
+        // Submit through React without reloading the browser page
         event.preventDefault();
         setErrorMessage("");
         setIsSubmitting(true);
@@ -43,12 +46,14 @@ function LoginPage() {
         try {
             const loggedInUser = await login(formData);
 
+            // Open the home page for the logged-in user's role
             if (loggedInUser.role === "ORGANISER") {
                 navigate("/organiser/events");
             } else {
                 navigate("/events");
             }
         } catch (error) {
+            // Show the backend error, or a fallback if none is available
             setErrorMessage(
                 error.response?.data?.errorMessage ||
                 "Unable to login. Please try again.",
@@ -92,6 +97,7 @@ function LoginPage() {
                         Enter your credentials to continue.
                     </p>
 
+                    {/* Display messages only when they contain text */}
                     {successMessage && (
                         <div className="form-success" role="status">
                             {successMessage}
@@ -141,6 +147,7 @@ function LoginPage() {
                             />
                         </div>
 
+                        {/* Disable the button while the login request is pending */}
                         <button
                             className="primary-button"
                             type="submit"

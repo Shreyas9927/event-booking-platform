@@ -33,11 +33,13 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void register(RegisterRequestDto registerRequestDto) {
 
+        // Normalize email to avoid duplicate accounts due to spaces or uppercase letters
         String normalizedEmail = registerRequestDto
                 .getEmail()
                 .trim()
                 .toLowerCase(Locale.ROOT);
 
+        // Check whether the email is already registered
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new EmailAlreadyExistsException(
                     AuthConstants.MESSAGE_409
@@ -47,6 +49,8 @@ public class AuthServiceImpl implements AuthService {
         User user = User.builder()
                 .name(registerRequestDto.getName().trim())
                 .email(normalizedEmail)
+
+                // Store password as BCrypt hash, never as plain text
                 .passwordHash(
                         passwordEncoder.encode(
                                 registerRequestDto.getPassword()
@@ -55,6 +59,7 @@ public class AuthServiceImpl implements AuthService {
                 .role(registerRequestDto.getRole())
                 .build();
 
+        // Save the new user in the database
         userRepository.save(user);
     }
 
@@ -62,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     public AuthResponseDto login(LoginRequestDto loginRequestDto) {
 
+        // Normalize email in the same way as registration
         String normalizedEmail = loginRequestDto
                 .getEmail()
                 .trim()
@@ -70,6 +76,7 @@ public class AuthServiceImpl implements AuthService {
         UserDetails userDetails;
 
         try {
+            // Authenticate email and password using Spring Security
             userDetails = (UserDetails) authenticationManager
                     .authenticate(
                             new UsernamePasswordAuthenticationToken(
@@ -80,12 +87,15 @@ public class AuthServiceImpl implements AuthService {
                     .getPrincipal();
 
         } catch (AuthenticationException exception) {
+
+            // Return one generic message for invalid email or password
             throw new org.springframework.security
                     .authentication.BadCredentialsException(
                     AuthConstants.MESSAGE_401
             );
         }
 
+        // Get user details required for the login response
         User user = userRepository
                 .findByEmail(normalizedEmail)
                 .orElseThrow(() ->
@@ -95,9 +105,11 @@ public class AuthServiceImpl implements AuthService {
                         )
                 );
 
+        // Generate JWT only after successful authentication
         String accessToken =
                 jwtService.generateToken(userDetails);
 
+        // Return token and basic logged-in user details to frontend
         return AuthResponseDto.builder()
                 .accessToken(accessToken)
                 .tokenType("Bearer")

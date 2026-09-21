@@ -42,3 +42,7 @@ frontend/.env
 __MACOSX/
 
 .env
+
+# Local installers and exported archives
+*.pkg
+*.zip

@@ -10,6 +10,7 @@ public final class BookingMapper {
 
     public static BookingResponseDto toResponseDto(Booking booking) {
 
+        // Convert Booking entity into safe booking data for API response
         return BookingResponseDto.builder()
                 .id(booking.getId())
                 .bookingReference(booking.getBookingReference())

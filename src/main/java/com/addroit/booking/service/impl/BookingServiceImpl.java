@@ -10,6 +10,8 @@ import com.addroit.booking.entity.Event;
 import com.addroit.booking.entity.User;
 import com.addroit.booking.enums.BookingStatus;
 import com.addroit.booking.enums.Role;
+import com.addroit.booking.exception.BookingAlreadyCancelledException;
+import com.addroit.booking.exception.BookingNotFoundException;
 import com.addroit.booking.exception.EventNotFoundException;
 import com.addroit.booking.exception.ForbiddenOperationException;
 import com.addroit.booking.exception.InsufficientTicketsException;
@@ -22,8 +24,6 @@ import com.addroit.booking.service.BookingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.addroit.booking.exception.BookingAlreadyCancelledException;
-import com.addroit.booking.exception.BookingNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -45,6 +45,7 @@ public class BookingServiceImpl implements BookingService {
             CreateBookingRequestDto requestDto,
             String attendeeEmail) {
 
+        // Get the currently logged-in attendee using email from JWT
         User attendee = userRepository
                 .findByEmail(attendeeEmail)
                 .orElseThrow(() ->
@@ -53,12 +54,14 @@ public class BookingServiceImpl implements BookingService {
                         )
                 );
 
+        // Only attendees are allowed to book tickets
         if (attendee.getRole() != Role.ATTENDEE) {
             throw new ForbiddenOperationException(
                     BookingConstants.MESSAGE_403
             );
         }
 
+        // Lock the event row to prevent ticket overselling during concurrent booking
         Event event = eventRepository
                 .findByIdForUpdate(eventId)
                 .orElseThrow(() ->
@@ -67,6 +70,7 @@ public class BookingServiceImpl implements BookingService {
                         )
                 );
 
+        // Check ticket availability after getting the event lock
         if (event.getAvailableTickets()
                 < requestDto.getQuantity()) {
 
@@ -75,11 +79,13 @@ public class BookingServiceImpl implements BookingService {
             );
         }
 
+        // Reduce available tickets after successful booking validation
         event.setAvailableTickets(
                 event.getAvailableTickets()
                         - requestDto.getQuantity()
         );
 
+        // Create a confirmed booking linked to the selected event and attendee
         Booking booking = Booking.builder()
                 .bookingReference(generateBookingReference())
                 .event(event)
@@ -89,6 +95,7 @@ public class BookingServiceImpl implements BookingService {
                 .bookedAt(LocalDateTime.now())
                 .build();
 
+        // Save the booking; event ticket update is saved automatically at transaction commit
         Booking savedBooking =
                 bookingRepository.save(booking);
 
@@ -100,6 +107,7 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingResponseDto> getMyBookings(
             String attendeeEmail) {
 
+        // Get logged-in attendee to fetch only their own bookings
         User attendee = userRepository
                 .findByEmail(attendeeEmail)
                 .orElseThrow(() ->
@@ -108,6 +116,7 @@ public class BookingServiceImpl implements BookingService {
                         )
                 );
 
+        // Return bookings in latest-booked-first order
         return bookingRepository
                 .findByAttendeeIdOrderByBookedAtDesc(
                         attendee.getId()
@@ -123,6 +132,7 @@ public class BookingServiceImpl implements BookingService {
             Long bookingId,
             String attendeeEmail) {
 
+        // Get the currently logged-in attendee using email from JWT
         User attendee = userRepository
                 .findByEmail(attendeeEmail)
                 .orElseThrow(() ->
@@ -131,6 +141,7 @@ public class BookingServiceImpl implements BookingService {
                         )
                 );
 
+        // Lock booking and verify it belongs to the logged-in attendee
         Booking booking = bookingRepository
                 .findOwnedBookingForUpdate(
                         bookingId,
@@ -142,12 +153,14 @@ public class BookingServiceImpl implements BookingService {
                         )
                 );
 
+        // Prevent the same booking from being cancelled more than once
         if (booking.getStatus() == BookingStatus.CANCELLED) {
             throw new BookingAlreadyCancelledException(
                     BookingConstants.MESSAGE_ALREADY_CANCELLED
             );
         }
 
+        // Lock the event because cancellation changes available ticket count
         Event event = eventRepository
                 .findByIdForUpdate(booking.getEvent().getId())
                 .orElseThrow(() ->
@@ -156,9 +169,11 @@ public class BookingServiceImpl implements BookingService {
                         )
                 );
 
+        // Mark booking as cancelled and store cancellation time
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancelledAt(LocalDateTime.now());
 
+        // Add cancelled ticket quantity back to available ticket capacity
         event.setAvailableTickets(
                 event.getAvailableTickets()
                         + booking.getQuantity()
@@ -169,6 +184,7 @@ public class BookingServiceImpl implements BookingService {
 
     private String generateBookingReference() {
 
+        // Generate a short unique value for the user-friendly booking reference
         String randomValue = UUID.randomUUID()
                 .toString()
                 .replace("-", "")

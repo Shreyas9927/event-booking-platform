@@ -10,10 +10,13 @@ function EventCard({
                        onBook,
                        isBooking,
                    }) {
+    // Each event card starts with one ticket selected
     const [quantity, setQuantity] = useState(1);
 
+    // Decide whether booking should be disabled for this event
     const isSoldOut = event.availableTickets === 0;
 
+    // Convert backend date into a readable Indian date and time format
     const formattedDate = new Intl.DateTimeFormat(
         "en-IN",
         {
@@ -23,6 +26,7 @@ function EventCard({
     ).format(new Date(event.eventDate));
 
     const handleBooking = () => {
+        // Send event ID and selected quantity to EventsPage
         onBook(event.id, Number(quantity));
     };
 
@@ -32,24 +36,25 @@ function EventCard({
 
             <div className="event-card-content">
                 <div className="event-card-top">
-          <span
-              className={
-                  isSoldOut
-                      ? "availability-badge sold-out"
-                      : "availability-badge"
-              }
-          >
-            {isSoldOut
-                ? "Sold out"
-                : `${event.availableTickets} tickets left`}
-          </span>
+                    <span
+                        className={
+                            isSoldOut
+                                ? "availability-badge sold-out"
+                                : "availability-badge"
+                        }
+                    >
+                        {isSoldOut
+                            ? "Sold out"
+                            : `${event.availableTickets} tickets left`}
+                    </span>
 
                     <span className="event-capacity">
-            {event.bookedTickets}/{event.capacity} booked
-          </span>
+                        {event.bookedTickets}/{event.capacity} booked
+                    </span>
                 </div>
 
                 <h2>{event.name}</h2>
+
                 <p className="event-description">
                     {event.description}
                 </p>
@@ -62,7 +67,9 @@ function EventCard({
 
                     <div>
                         <UserRound size={18} />
-                        <span>Organised by {event.organiserName}</span>
+                        <span>
+                            Organised by {event.organiserName}
+                        </span>
                     </div>
                 </div>
 

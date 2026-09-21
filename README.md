@@ -1,8 +1,27 @@
 # EventFlow – Event Booking Platform
 
-EventFlow is a full-stack event booking platform where organisers can create and monitor events, while attendees can browse events, book tickets, view their bookings, and cancel confirmed bookings.
+EventFlow is a full-stack event booking platform where organisers create and manage events, while attendees browse events, book tickets, review their bookings, and cancel confirmed bookings.
 
-The application prevents ticket overselling through transactional database locking.
+The application uses a three-tier AWS deployment. The React frontend is hosted on Amazon S3, the Spring Boot backend runs as a Docker container on Amazon ECS Fargate, and application data is stored in Amazon RDS for MySQL. The application also prevents ticket overselling through transactional database locking.
+
+## Live Application
+
+| Component | URL |
+|---|---|
+| Frontend | http://booking-platform-frontend-312030313098.s3-website.ap-south-1.amazonaws.com |
+| Backend health check | http://booking-platform-alb-1213308022.ap-south-1.elb.amazonaws.com/actuator/health |
+
+> The frontend uses an Amazon S3 static website endpoint, which is HTTP-only. A production enhancement would use Amazon CloudFront and an ACM certificate to provide HTTPS.
+
+## How to Use the Application
+
+1. Open the **Frontend** URL above.
+2. Register as either an **Organiser** or an **Attendee**.
+3. Log in using the account you created.
+4. As an organiser, create an event and monitor its ticket availability.
+5. As an attendee, browse events, book tickets, view bookings, and cancel a confirmed booking when needed.
+
+The backend automatically updates available and booked ticket counts. When a confirmed booking is cancelled, the tickets are restored.
 
 ## Features
 
@@ -47,21 +66,41 @@ The application prevents ticket overselling through transactional database locki
 - Lucide React
 - CSS
 
-## Architecture
+## AWS Architecture
 
-The application follows a three-tier architecture:
+The application follows a three-tier architecture deployed in AWS:
 
 ```text
-React frontend
+User browser
       |
-      | REST API over HTTP
       v
-Spring Boot backend
+Amazon S3 static website (React frontend)
+      |
+      | REST API requests over HTTP
+      v
+Application Load Balancer
+      |
+      v
+Amazon ECS Fargate (Spring Boot Docker container)
       |
       | Spring Data JPA / Hibernate
       v
-MySQL database
+Amazon RDS for MySQL
 ```
+
+### AWS Services Used
+
+| AWS service | Purpose in this project |
+|---|---|
+| Amazon S3 | Hosts the React production build as a static website. |
+| Amazon ECR | Stores the private Docker image for the Spring Boot backend. |
+| Amazon ECS with Fargate | Runs and manages the backend container without managing EC2 servers. |
+| Application Load Balancer | Receives HTTP requests and routes traffic to healthy ECS tasks. |
+| Amazon RDS for MySQL | Provides a managed relational database for users, events, and bookings. |
+| Amazon CloudWatch | Stores ECS container logs for monitoring and troubleshooting. |
+| VPC and Security Groups | Provide isolated networking and restrict service-to-service access. |
+
+The ALB health check calls `/actuator/health`. It forwards traffic only to healthy backend tasks. The RDS instance is not publicly accessible; MySQL port `3306` is allowed only from the ECS security group.
 
 The backend follows a layered structure:
 
@@ -90,6 +129,7 @@ The application uses stateless JWT authentication.
 - Invalid and expired tokens return a structured `401 Unauthorized` response.
 - Unauthorized role access returns `403 Forbidden`.
 - CORS origins are configured using an environment variable.
+- RDS database access is restricted to the ECS security group.
 
 ## Concurrency and Overselling Prevention
 
@@ -281,17 +321,50 @@ Error response:
 }
 ```
 
-## Planned AWS Deployment
+## Deployment and Operations
 
-The production architecture is designed to use:
+### Backend deployment flow
 
-- AWS Amplify for the React frontend
-- Amazon ECS for the Spring Boot backend
-- Application Load Balancer in front of ECS
-- Amazon RDS for MySQL
-- Amazon ECR for the backend Docker image
-- AWS Secrets Manager or ECS secrets for credentials
-- CloudWatch for application logs and monitoring
+```text
+Spring Boot application
+    → Docker image
+    → Amazon ECR
+    → ECS task definition
+    → ECS Fargate service
+    → Application Load Balancer
+```
+
+The ECS service maintains the required number of backend tasks. When a new task-definition revision is deployed, ECS starts a new task, the ALB verifies it through the health check, and the previous task is stopped gracefully after the new task is healthy.
+
+### Frontend deployment flow
+
+```bash
+cd frontend
+npm run build
+aws s3 sync dist s3://booking-platform-frontend-312030313098 --delete --region ap-south-1
+```
+
+Before building for AWS, configure the frontend API URL to point to the ALB:
+
+```env
+VITE_API_BASE_URL=http://booking-platform-alb-1213308022.ap-south-1.elb.amazonaws.com/api
+```
+
+### Monitoring and troubleshooting
+
+CloudWatch logs are configured for the ECS container. During deployment, CloudWatch can be used to investigate application startup errors, database connectivity problems, and runtime exceptions.
+
+For example, an initial RDS connectivity issue was identified through ECS container logs. The RDS security-group rule was then updated to allow MySQL port `3306` from the ECS security group, and the service was redeployed successfully.
+
+## Production Improvements
+
+- Store database credentials and JWT secrets in AWS Secrets Manager instead of plain environment variables.
+- Use separate security groups for the ALB and ECS tasks.
+- Use CloudFront with an ACM certificate to serve the frontend over HTTPS.
+- Keep the S3 bucket private and allow access only through CloudFront.
+- Run multiple ECS tasks across Availability Zones and configure autoscaling.
+- Enable RDS backups, Multi-AZ deployment, and CloudWatch alarms.
+- Add CI/CD with GitHub Actions, AWS CodePipeline, or Jenkins.
 
 ## Author
 

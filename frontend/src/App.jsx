@@ -1,7 +1,7 @@
 import {
-  Navigate,
-  Route,
-  Routes,
+    Navigate,
+    Route,
+    Routes,
 } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import useAuth from "./context/useAuth";
@@ -15,83 +15,89 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import "./styles/global.css";
 
 function App() {
-  const { user, isAuthenticated } = useAuth();
+    // Get the current user and login status from auth context
+    const { user, isAuthenticated } = useAuth();
 
-  const homePath =
-      user?.role === "ORGANISER"
-          ? "/organiser/events"
-          : "/events";
+    // Choose the home page based on the user's role
+    const homePath =
+        user?.role === "ORGANISER"
+            ? "/organiser/events"
+            : "/events";
 
-  return (
-      <Routes>
-        <Route
-            path="/"
-            element={
-              <Navigate
-                  to={isAuthenticated ? homePath : "/login"}
-                  replace
-              />
-            }
-        />
-
-        <Route path="/login" element={<LoginPage />} />
-
-        <Route
-            path="/register"
-            element={<RegisterPage />}
-        />
-
-        <Route
-            element={
-              <ProtectedRoute
-                  allowedRoles={["ATTENDEE"]}
-              />
-            }
-        >
-          <Route element={<AppLayout />}>
+    return (
+        <Routes>
+            {/* Redirect the home URL based on login status */}
             <Route
-                path="/events"
-                element={<EventsPage />}
+                path="/"
+                element={
+                    <Navigate
+                        to={isAuthenticated ? homePath : "/login"}
+                        replace
+                    />
+                }
             />
 
-            <Route
-                path="/bookings"
-                element={<MyBookingsPage />}
-            />
-          </Route>
-        </Route>
-
-        <Route
-            element={
-              <ProtectedRoute
-                  allowedRoles={["ORGANISER"]}
-              />
-            }
-        >
-          <Route element={<AppLayout />}>
-            <Route
-                path="/organiser/events"
-                element={<OrganiserEventsPage />}
-            />
+            <Route path="/login" element={<LoginPage />} />
 
             <Route
-                path="/organiser/events/create"
-                element={<CreateEventPage />}
+                path="/register"
+                element={<RegisterPage />}
             />
-          </Route>
-        </Route>
 
-        <Route
-            path="*"
-            element={
-              <Navigate
-                  to={isAuthenticated ? homePath : "/login"}
-                  replace
-              />
-            }
-        />
-      </Routes>
-  );
+            {/* Only attendees can access these pages */}
+            <Route
+                element={
+                    <ProtectedRoute
+                        allowedRoles={["ATTENDEE"]}
+                    />
+                }
+            >
+                <Route element={<AppLayout />}>
+                    <Route
+                        path="/events"
+                        element={<EventsPage />}
+                    />
+
+                    <Route
+                        path="/bookings"
+                        element={<MyBookingsPage />}
+                    />
+                </Route>
+            </Route>
+
+            {/* Only organisers can access these pages */}
+            <Route
+                element={
+                    <ProtectedRoute
+                        allowedRoles={["ORGANISER"]}
+                    />
+                }
+            >
+                <Route element={<AppLayout />}>
+                    <Route
+                        path="/organiser/events"
+                        element={<OrganiserEventsPage />}
+                    />
+
+                    <Route
+                        path="/organiser/events/create"
+                        element={<CreateEventPage />}
+                    />
+                </Route>
+            </Route>
+
+            {/* Redirect unknown URLs to the appropriate starting page */}
+            <Route
+                path="*"
+                element={
+                    <Navigate
+                        to={isAuthenticated ? homePath : "/login"}
+                        replace
+                    />
+                }
+            />
+        </Routes>
+    );
 }
 
 export default App;

@@ -24,8 +24,10 @@ function EventsPage() {
         useState("");
 
     useEffect(() => {
+        // Prevent state updates if the user leaves this page before API response
         let isActive = true;
 
+        // Load upcoming events when the page is first displayed
         getUpcomingEvents()
             .then((eventData) => {
                 if (isActive) {
@@ -46,6 +48,7 @@ function EventsPage() {
                 }
             });
 
+        // Mark component as inactive when user leaves this page
         return () => {
             isActive = false;
         };
@@ -57,6 +60,8 @@ function EventsPage() {
     ) => {
         setErrorMessage("");
         setSuccessMessage("");
+
+        // Track only the event currently being booked
         setBookingEventId(eventId);
 
         try {
@@ -69,6 +74,7 @@ function EventsPage() {
                 `${quantity} ticket(s) booked successfully. Reference: ${booking.bookingReference}`,
             );
 
+            // Reload events to show the latest available ticket count
             const updatedEvents =
                 await getUpcomingEvents();
 
@@ -103,12 +109,14 @@ function EventsPage() {
                 <CalendarSearch size={46} />
             </section>
 
+            {/* Show booking success message only when booking succeeds */}
             {successMessage && (
                 <div className="form-success page-message">
                     {successMessage}
                 </div>
             )}
 
+            {/* Show API error only when an error message exists */}
             {errorMessage && (
                 <div
                     className="form-error page-message"
@@ -118,12 +126,14 @@ function EventsPage() {
                 </div>
             )}
 
+            {/* Show loading state while upcoming events are being fetched */}
             {isLoading && (
                 <div className="loading-state">
                     Loading upcoming events...
                 </div>
             )}
 
+            {/* Show empty state when API returns no upcoming events */}
             {!isLoading && events.length === 0 && (
                 <div className="empty-state">
                     <CalendarSearch size={42} />
@@ -137,6 +147,7 @@ function EventsPage() {
                 </div>
             )}
 
+            {/* Create one EventCard component for each available event */}
             {!isLoading && events.length > 0 && (
                 <section className="event-grid">
                     {events.map((event) => (

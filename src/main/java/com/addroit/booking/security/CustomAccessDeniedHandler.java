@@ -26,6 +26,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             AccessDeniedException accessDeniedException
     ) throws IOException {
 
+        // Return a standard JSON response when user has a valid login but wrong role
         ErrorResponseDto errorResponse = new ErrorResponseDto(
                 request.getRequestURI(),
                 "403",

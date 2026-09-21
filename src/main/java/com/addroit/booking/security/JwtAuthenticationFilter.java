@@ -33,6 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authorizationHeader =
                 request.getHeader("Authorization");
 
+        // Allow public APIs to continue when no Bearer token is sent
         if (authorizationHeader == null
                 || !authorizationHeader.startsWith("Bearer ")) {
 
@@ -40,16 +41,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Remove "Bearer " and keep only the JWT token
         String token = authorizationHeader.substring(7);
 
         try {
             String email = jwtService.extractUsername(token);
 
+            // Authenticate only when this request has not been authenticated already
             if (email != null
                     && SecurityContextHolder
                     .getContext()
                     .getAuthentication() == null) {
 
+                // Load latest user details and role from the database
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(email);
 
@@ -62,6 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     userDetails.getAuthorities()
                             );
 
+                    // Store logged-in user details for the current request
                     SecurityContextHolder
                             .getContext()
                             .setAuthentication(authentication);
@@ -72,6 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (JwtException | IllegalArgumentException exception) {
 
+            // Send invalid or expired JWT errors to the global exception handler
             handlerExceptionResolver.resolveException(
                     request,
                     response,

@@ -14,6 +14,7 @@ function AppHeader() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
 
+    // Clear login information and open the login page
     const handleLogout = () => {
         logout();
         navigate("/login");
@@ -28,6 +29,7 @@ function AppHeader() {
                 </NavLink>
 
                 <nav className="header-navigation">
+                    {/* Show attendee navigation links */}
                     {user.role === "ATTENDEE" && (
                         <>
                             <NavLink to="/events">
@@ -42,6 +44,7 @@ function AppHeader() {
                         </>
                     )}
 
+                    {/* Show organiser navigation links */}
                     {user.role === "ORGANISER" && (
                         <>
                             <NavLink to="/organiser/events">
@@ -61,10 +64,10 @@ function AppHeader() {
                     <div className="user-summary">
                         <strong>{user.name}</strong>
                         <span>
-              {user.role === "ORGANISER"
-                  ? "Organiser"
-                  : "Attendee"}
-            </span>
+                            {user.role === "ORGANISER"
+                                ? "Organiser"
+                                : "Attendee"}
+                        </span>
                     </div>
 
                     <button

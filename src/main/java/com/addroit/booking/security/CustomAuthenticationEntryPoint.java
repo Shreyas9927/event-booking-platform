@@ -26,6 +26,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             AuthenticationException authenticationException
     ) throws IOException {
 
+        // Return a standard JSON response when authentication is missing or invalid
         ErrorResponseDto errorResponse = new ErrorResponseDto(
                 request.getRequestURI(),
                 "401",

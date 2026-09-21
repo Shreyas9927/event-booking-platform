@@ -15,6 +15,7 @@ import {
 
 const currentDate = new Date();
 
+// Creates the minimum allowed date-time in the format needed by datetime-local input
 const minimumDateTime = new Date(
     currentDate.getTime() -
     currentDate.getTimezoneOffset() * 60000,
@@ -35,6 +36,7 @@ function CreateEventPage() {
     const [errorMessage, setErrorMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Update only the field changed by the organiser
     const handleChange = (event) => {
         const { name, value } = event.target;
 
@@ -45,16 +47,20 @@ function CreateEventPage() {
     };
 
     const handleSubmit = async (event) => {
+        // Stop browser refresh on form submit
         event.preventDefault();
+
         setErrorMessage("");
         setIsSubmitting(true);
 
         try {
             await createEvent({
                 ...formData,
+                // HTML number inputs provide values as text, so convert capacity to a number
                 capacity: Number(formData.capacity),
             });
 
+            // Return to organiser dashboard and show a success message
             navigate("/organiser/events", {
                 state: {
                     message: "Event created successfully.",
@@ -66,6 +72,7 @@ function CreateEventPage() {
                 "Unable to create the event.",
             );
         } finally {
+            // Re-enable the button after API request is completed
             setIsSubmitting(false);
         }
     };
@@ -156,6 +163,7 @@ function CreateEventPage() {
                                     id="eventDate"
                                     name="eventDate"
                                     type="datetime-local"
+                                    // Prevent selecting a past date in the browser
                                     min={minimumDateTime}
                                     value={formData.eventDate}
                                     onChange={handleChange}
